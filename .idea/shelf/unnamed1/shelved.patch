@@ -1,0 +1,18 @@
+Index: app/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n\n    <data>\n\n        <import type=\"android.view.View\" />\n\n        <variable\n            name=\"vm\"\n            type=\"imdb.assignment.umesh0492.ui.movieList.MainActivityVM\" />\n    </data>\n\n    <android.support.constraint.ConstraintLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"match_parent\">\n\n        <android.support.v7.widget.RecyclerView\n            android:id=\"@+id/recycler_view\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"0dp\"\n            android:layout_marginBottom=\"8dp\"\n            android:layout_marginEnd=\"8dp\"\n            android:layout_marginStart=\"8dp\"\n            android:layout_marginTop=\"8dp\"\n            android:scrollbars=\"vertical\"\n            app:layout_constraintBottom_toTopOf=\"@+id/more_progress_bar\"\n            app:layout_constraintEnd_toEndOf=\"parent\"\n            app:layout_constraintHorizontal_bias=\"0.0\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintTop_toTopOf=\"parent\"/>\n\n        <ProgressBar\n            android:id=\"@+id/more_progress_bar\"\n            style=\"?android:attr/progressBarStyleLarge\"\n            android:layout_width=\"match_parent\"\n            android:animateLayoutChanges=\"true\"\n            android:animationResolution=\"1\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginBottom=\"8dp\"\n            android:indeterminate=\"true\"\n            android:visibility=\"@{vm.isLoading? View.VISIBLE : View.GONE}\"\n            app:layout_constraintBottom_toBottomOf=\"parent\"\n            app:layout_constraintEnd_toEndOf=\"@+id/recycler_view\"\n            app:layout_constraintStart_toStartOf=\"@+id/recycler_view\" />\n    </android.support.constraint.ConstraintLayout>\n</layout>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_main.xml	(date 1524820713000)
++++ app/src/main/res/layout/activity_main.xml	(date 1525326558000)
+@@ -8,7 +8,7 @@
+ 
+         <variable
+             name="vm"
+-            type="imdb.assignment.umesh0492.ui.movieList.MainActivityVM" />
++            type="imdb.assignment.umesh0492.ui.movieList.MovieActivityVM" />
+     </data>
+ 
+     <android.support.constraint.ConstraintLayout

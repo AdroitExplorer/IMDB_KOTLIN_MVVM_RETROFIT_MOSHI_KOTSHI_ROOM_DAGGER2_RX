@@ -1,31 +1,34 @@
 package imdb.assignment.umesh0492
 
+import android.app.Activity
 import android.app.Application
-import com.squareup.moshi.Moshi
-import imdb.assignment.umesh0492.util.ApplicationJsonAdapterFactory
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
+import com.facebook.stetho.Stetho
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
+import imdb.assignment.umesh0492.di.components.AppComponent
+import imdb.assignment.umesh0492.di.components.DaggerAppComponent
+import javax.inject.Inject
 
-class App : Application() {
 
-    lateinit var retrofit: Retrofit
+class App : Application(), HasActivityInjector {
 
-    companion object {
-        lateinit var instance: App
-    }
+    @Inject
+    lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
-        retrofit = Retrofit.Builder()
-                .baseUrl("http://www.omdbapi.com/?apikey=e22bb521&")
-                .addConverterFactory(MoshiConverterFactory.create(createMoshiInstance()))
-                .build()
+         DaggerAppComponent.builder()
+                .application(this)
+                .build().inject(this)
+        initStetho()
     }
 
-    private fun createMoshiInstance(): Moshi {
-        return Moshi.Builder()
-                .add(ApplicationJsonAdapterFactory.INSTANCE)
-                .build()
+    private fun initStetho() {
+        if (BuildConfig.DEBUG)
+            Stetho.initializeWithDefaults(this)
+    }
+
+    override fun activityInjector(): DispatchingAndroidInjector<Activity> {
+        return activityDispatchingAndroidInjector
     }
 }

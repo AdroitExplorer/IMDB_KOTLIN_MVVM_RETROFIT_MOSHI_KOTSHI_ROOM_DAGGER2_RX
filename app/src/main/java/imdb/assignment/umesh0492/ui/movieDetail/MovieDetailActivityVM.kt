@@ -1,33 +1,30 @@
 package imdb.assignment.umesh0492.ui.movieDetail
 
-import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import imdb.assignment.umesh0492.ui.movieDetail.network.MoviesDetailRepository
-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import imdb.assignment.umesh0492.data.DataManager
+import imdb.assignment.umesh0492.data.model.MoviesDataClass
+import imdb.assignment.umesh0492.ui.base.BaseViewModel
+import imdb.assignment.umesh0492.util.rx.SchedulerProvider
+import io.reactivex.schedulers.Schedulers
 
-class MovieDetailActivityVM(movieIncomplete: MoviesDataClass) {
+class MovieDetailActivityVM(movie: MoviesDataClass, dataManager: DataManager,
+                            schedulerProvider: SchedulerProvider)
+    : BaseViewModel<Any?>(dataManager = dataManager, schedulerProvider = schedulerProvider) {
 
-    var movie: ObservableField<MoviesDataClass> = ObservableField(movieIncomplete)
-    private val repo: MoviesDetailRepository = MoviesDetailRepository()
-    var isLoading: ObservableBoolean = ObservableBoolean(false)
+    var movie: ObservableField<MoviesDataClass> = ObservableField(movie)
 
     fun getMovie(imdbID: String) {
-        isLoading.set(true)
-        repo.getMovie(object : Callback<MoviesDataClass> {
-            override fun onResponse(call: Call<MoviesDataClass>, response: Response<MoviesDataClass>) {
-                if (response.isSuccessful && response.body() != null) {
-                    movie.set(response.body())
-                } else {
-                    isLoading.set(false)
-                }
-            }
+        setIsLoading(true)
 
-            override fun onFailure(call: Call<MoviesDataClass>, t: Throwable) {
-                isLoading.set(false)
-            }
-        }, id = imdbID)
+        compositeDisposable.add(dataManager.getMovieDetailsApiCall(imdbID)
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.io())
+                .subscribe({ movieResponse ->
+                    setIsLoading(false)
+                    movie.set(movieResponse)
+                },
+                        {
+                            setIsLoading(false)
+                        }))
     }
 }

@@ -8,7 +8,7 @@
 
         <variable
             name="vm"
-            type="imdb.assignment.umesh0492.ui.movieList.MainActivityVM" />
+            type="imdb.assignment.umesh0492.ui.movieList.MovieActivityVM" />
     </data>
 
     <android.support.constraint.ConstraintLayout
@@ -30,7 +30,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
-        <ProgressBar
+        <!--<ProgressBar
             android:id="@+id/more_progress_bar"
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="match_parent"
@@ -42,6 +42,18 @@
             android:visibility="@{vm.isLoading? View.VISIBLE : View.GONE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/recycler_view"
-            app:layout_constraintStart_toStartOf="@+id/recycler_view" />
+            app:layout_constraintStart_toStartOf="@+id/recycler_view" />-->
+        <android.support.v4.widget.ContentLoadingProgressBar
+            android:id="@+id/more_progress_bar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/recycler_view"
+            app:layout_constraintStart_toStartOf="@+id/recycler_view"
+            android:visibility="@{vm.isLoading ? View.VISIBLE : View.GONE}" />
+
     </android.support.constraint.ConstraintLayout>
 </layout>

@@ -3,18 +3,37 @@
 buildscript {
 
     ext{
-        kotlin_version = '1.2.40'
+        kotlinVersion = '1.2.41'
+        gradleVersion = '3.1.2'
+
         supportLibVersion = '27.1.1'
         constraintLayoutVersion = '1.1.0'
 
         retrofitVersion = '2.4.0'
         moshiVersion = '1.5.0'
         kotshiVersion = '1.0.2'
+        okHttpVersion = '3.10.0'
+        stethoVersion = '1.5.0'
 
         glideVersion = '4.7.1'
 
         roomVersion = '1.0.0'
+
         archLifecycleVersion = '1.1.1'
+
+        dagger2Version = '2.15'
+
+        timberVersion = '4.6.0'
+        leakCanary = '1.5.4'
+
+        rxJavaVersion = '2.1.9'
+        rxAndroidVersion = '2.0.2'
+
+        mockitoVersion = '2.15.0'
+        powerMockVersion = '2.0.0-beta.5'
+
+        livedataTesting  = '1.1.0'
+        roomTesting      = '1.0.0'
 
     }
 
@@ -23,8 +42,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.android.tools.build:gradle:$gradleVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -34,6 +53,11 @@ allprojects {
     repositories {
         google()
         jcenter()
+    }
+    afterEvaluate { // to print more than 100 errors
+        tasks.withType(JavaCompile.class) {
+            options.compilerArgs << "-Xmaxerrs" << "500"
+        }
     }
 }
 

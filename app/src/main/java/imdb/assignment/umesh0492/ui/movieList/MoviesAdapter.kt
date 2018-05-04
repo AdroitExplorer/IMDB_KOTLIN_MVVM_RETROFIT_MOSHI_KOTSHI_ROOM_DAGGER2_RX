@@ -4,14 +4,14 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
-import rentomojo.test.umesh0492.databinding.ItemMovieBinding
+import imdb.assignment.umesh0492.data.model.MoviesDataClass
+import imdb.assignment.umesh0492.databinding.ItemMovieBinding
 
 class MoviesAdapter : RecyclerView.Adapter<MoviesAdapter.MovieItemViewHolder>() {
 
     var movieList: MutableList<MoviesDataClass> = ArrayList()
 
-    private lateinit var vm: MainActivityVM
+    private lateinit var vm: MovieActivityVM
     override fun onBindViewHolder(holder: MovieItemViewHolder, position: Int) {
         Glide.with(holder.binding.poster).load(movieList[position].Poster).into(holder.binding.poster)
         holder.binding.item = movieList[position]
@@ -36,7 +36,7 @@ class MoviesAdapter : RecyclerView.Adapter<MoviesAdapter.MovieItemViewHolder>() 
 
     inner class MovieItemViewHolder(val binding: ItemMovieBinding) : RecyclerView.ViewHolder(binding.root)
 
-    fun attachVm(vm: MainActivityVM) {
+    fun attachVm(vm: MovieActivityVM) {
         this.vm = vm
     }
 }

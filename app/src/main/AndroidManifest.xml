@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="rentomojo.test.umesh0492">
+    package="imdb.assignment.umesh0492">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -12,7 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="imdb.assignment.umesh0492.ui.movieList.MainActivity">
+        <activity android:name="imdb.assignment.umesh0492.ui.movieList.MovieActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -20,7 +21,7 @@
         </activity>
         <activity
             android:name="imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivity"
-            android:parentActivityName="imdb.assignment.umesh0492.ui.movieList.MainActivity" />
+            android:parentActivityName="imdb.assignment.umesh0492.ui.movieList.MovieActivity" />
     </application>
 
 </manifest>

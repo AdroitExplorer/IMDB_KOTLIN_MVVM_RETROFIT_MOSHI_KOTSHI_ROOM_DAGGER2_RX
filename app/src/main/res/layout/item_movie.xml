@@ -6,11 +6,11 @@
 
         <variable
             name="item"
-            type="imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass" />
+            type="imdb.assignment.umesh0492.data.model.MoviesDataClass" />
 
         <variable
             name="vm"
-            type="imdb.assignment.umesh0492.ui.movieList.MainActivityVM" />
+            type="imdb.assignment.umesh0492.ui.movieList.MovieActivityVM" />
     </data>
 
     <android.support.v7.widget.CardView

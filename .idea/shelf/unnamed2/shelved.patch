@@ -1,0 +1,2249 @@
+Index: app/src/androidTest/java/imdb/assignment/umesh0492/ExampleInstrumentedTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492\n\nimport android.support.test.InstrumentationRegistry\nimport android.support.test.runner.AndroidJUnit4\n\nimport org.junit.Test\nimport org.junit.runner.RunWith\n\nimport org.junit.Assert.*\n\n/**\n * Instrumented test, which will execute on an Android device.\n *\n * See [testing documentation](http://d.android.com/tools/testing).\n */\n@RunWith(AndroidJUnit4::class)\nclass ExampleInstrumentedTest {\n    @Test\n    fun useAppContext() {\n        // Context of the app under test.\n        val appContext = InstrumentationRegistry.getTargetContext()\n        assertEquals(\"rentomojo.test.umesh0492\", appContext.packageName)\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/androidTest/java/imdb/assignment/umesh0492/ExampleInstrumentedTest.kt	(date 1524820713000)
++++ app/src/androidTest/java/imdb/assignment/umesh0492/ExampleInstrumentedTest.kt	(date 1525330639000)
+@@ -2,12 +2,10 @@
+ 
+ import android.support.test.InstrumentationRegistry
+ import android.support.test.runner.AndroidJUnit4
+-
++import org.junit.Assert.assertEquals
+ import org.junit.Test
+ import org.junit.runner.RunWith
+ 
+-import org.junit.Assert.*
+-
+ /**
+  * Instrumented test, which will execute on an Android device.
+  *
+Index: app/src/main/java/imdb/assignment/umesh0492/base/BaseView.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/base/BaseView.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/base/BaseView.kt	(date 1524820713000)
+@@ -1,5 +0,0 @@
+-package imdb.assignment.umesh0492.base
+-
+-interface BaseView {
+-    fun setUpView()
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/database/MoviesDAO.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/database/MoviesDAO.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/db/dao/MoviesDAO.kt	(date 1525344428000)
+@@ -1,11 +1,8 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.database
++package imdb.assignment.umesh0492.data.local.db.dao
+ 
+ import android.arch.lifecycle.LiveData
+-import android.arch.persistence.room.Dao
+-import android.arch.persistence.room.Insert
+-import android.arch.persistence.room.OnConflictStrategy
+-import android.arch.persistence.room.Query
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
++import android.arch.persistence.room.*
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
+ 
+ @Dao
+ interface MoviesDAO {
+@@ -13,6 +10,12 @@
+     @get:Query("SELECT * from movie_table")
+     val allMovies: LiveData<List<MoviesDataClass>>
+ 
++    @Query("SELECT * from movie_table Where imdbID = :id")
++    fun getMovieById(id : String): MoviesDataClass
++
++    @Update(onConflict = OnConflictStrategy.REPLACE)
++    fun update(movie: MoviesDataClass)
++
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     fun insert(movie: MoviesDataClass)
+ 
+Index: app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDatabase.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDatabase.kt	(date 1525340425000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDatabase.kt	(date 1525340425000)
+@@ -0,0 +1,11 @@
++package imdb.assignment.umesh0492.data.local.db
++
++import android.arch.persistence.room.Database
++import android.arch.persistence.room.RoomDatabase
++import imdb.assignment.umesh0492.data.local.db.dao.MoviesDAO
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++
++@Database(entities = [(MoviesDataClass::class)], version = 2)
++abstract class AppDatabase : RoomDatabase() {
++    abstract fun moviesDAO(): MoviesDAO
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDBHelper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDBHelper.kt	(date 1525345296000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/db/AppDBHelper.kt	(date 1525345296000)
+@@ -0,0 +1,29 @@
++package imdb.assignment.umesh0492.data.local.db
++
++import android.arch.lifecycle.LiveData
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import javax.inject.Inject
++import javax.inject.Singleton
++
++
++@Singleton
++class AppDBHelper
++@Inject
++constructor(private val mAppDatabase: AppDatabase) : DbHelper {
++
++    override fun insertMovie(movie: MoviesDataClass) {
++        mAppDatabase.moviesDAO().insert(movie)
++    }
++
++    override fun updateMovie(movie: MoviesDataClass) {
++        mAppDatabase.moviesDAO().update(movie)
++    }
++
++    override fun getMovieById(id: String) : MoviesDataClass{
++        return mAppDatabase.moviesDAO().getMovieById(id)
++    }
++
++    override fun getMovieListFromDB(): LiveData<List<MoviesDataClass>> {
++        return mAppDatabase.moviesDAO().allMovies
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/local/db/DBHelper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/local/db/DBHelper.kt	(date 1525345296000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/db/DBHelper.kt	(date 1525345296000)
+@@ -0,0 +1,17 @@
++package imdb.assignment.umesh0492.data.local.db
++
++import android.arch.lifecycle.LiveData
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import io.reactivex.Observable
++
++
++interface DbHelper {
++
++    fun getMovieListFromDB(): LiveData<List<MoviesDataClass>>
++
++    fun insertMovie(movie : MoviesDataClass)
++
++    fun updateMovie(movie: MoviesDataClass)
++
++    fun getMovieById(id: String): MoviesDataClass
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/local/pref/AppPreferences.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/local/pref/AppPreferences.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/pref/AppPreferences.kt	(date 1525330639000)
+@@ -0,0 +1,20 @@
++package imdb.assignment.umesh0492.data.local.pref
++
++import android.content.Context
++import android.content.SharedPreferences
++import imdb.assignment.umesh0492.di.qualifiers.PreferenceInfo
++import javax.inject.Inject
++
++class AppPreferences
++@Inject constructor(context: Context, @PreferenceInfo prefFileName: String) : PreferencesHelper {
++
++    private val mPrefs: SharedPreferences = context.getSharedPreferences(prefFileName, Context.MODE_PRIVATE)
++
++    private val PREF_KEY_CURRENT_USER_NAME = "PREF_KEY_CURRENT_USER_NAME"
++
++    override var currentUserName: String
++        get() = mPrefs.getString(PREF_KEY_CURRENT_USER_NAME, null)
++        set(userName) = mPrefs.edit().putString(PREF_KEY_CURRENT_USER_NAME, userName).apply()
++
++
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/local/pref/PreferencesHelper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/local/pref/PreferencesHelper.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/local/pref/PreferencesHelper.kt	(date 1525330639000)
+@@ -0,0 +1,7 @@
++package imdb.assignment.umesh0492.data.local.pref
++
++
++interface PreferencesHelper {
++
++    var currentUserName: String
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/remote/Api.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/remote/Api.kt	(date 1525338662000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/remote/Api.kt	(date 1525338662000)
+@@ -0,0 +1,15 @@
++package imdb.assignment.umesh0492.data.remote
++
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import io.reactivex.Single
++import retrofit2.http.GET
++import retrofit2.http.Query
++
++interface Api {
++    @GET("?apikey=e22bb521")
++    fun getMovieList(@Query(value = "s") search: String, @Query(value = "page") pageNo: String): Single<SearchDataClass>
++
++    @GET("?apikey=e22bb521")
++    fun getMovieDetails(@Query(value = "i") id: String): Single<MoviesDataClass>
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiEndPoints.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiEndPoints.kt	(date 1525255848000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiEndPoints.kt	(date 1525255848000)
+@@ -0,0 +1,8 @@
++package imdb.assignment.umesh0492.data.remote
++
++import imdb.assignment.umesh0492.BuildConfig
++
++
++object ApiEndPoint {
++    val ENDPOINT_Movie = BuildConfig.BASE_URL
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiHelper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiHelper.kt	(date 1525338662000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/remote/ApiHelper.kt	(date 1525338662000)
+@@ -0,0 +1,10 @@
++package imdb.assignment.umesh0492.data.remote
++
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import io.reactivex.Single
++
++interface ApiHelper {
++    fun getMovieDetailsApiCall(id: String): Single<MoviesDataClass>
++    fun getMovieListApiCall(pageNo: Int): Single<SearchDataClass>
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/remote/AppApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/remote/AppApi.kt	(date 1525338662000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/remote/AppApi.kt	(date 1525338662000)
+@@ -0,0 +1,26 @@
++package imdb.assignment.umesh0492.data.remote
++
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import io.reactivex.Single
++import retrofit2.Retrofit
++import javax.inject.Inject
++import javax.inject.Singleton
++
++@Singleton
++class AppApi
++@Inject constructor(var retrofit: Retrofit) : ApiHelper {
++
++
++    override fun getMovieDetailsApiCall(id: String): Single<MoviesDataClass> {
++        val service = retrofit.create(Api::class.java)
++        return service.getMovieDetails(id)
++    }
++
++    override fun getMovieListApiCall(pageNo: Int): Single<SearchDataClass> {
++        val service = retrofit.create(Api::class.java)
++        return service.getMovieList("an", pageNo = pageNo.toString())
++    }
++
++
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/AppDataManager.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/AppDataManager.kt	(date 1525345443000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/AppDataManager.kt	(date 1525345443000)
+@@ -0,0 +1,96 @@
++package imdb.assignment.umesh0492.data
++
++import android.arch.lifecycle.LiveData
++import android.arch.lifecycle.MediatorLiveData
++import android.content.Context
++import android.support.annotation.Nullable
++import imdb.assignment.umesh0492.data.local.db.DbHelper
++import imdb.assignment.umesh0492.data.local.pref.PreferencesHelper
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import imdb.assignment.umesh0492.data.remote.ApiHelper
++import io.reactivex.Observable
++import io.reactivex.Single
++import io.reactivex.disposables.CompositeDisposable
++import io.reactivex.schedulers.Schedulers
++import javax.inject.Inject
++import javax.inject.Singleton
++
++
++@Singleton
++class AppDataManager
++@Inject constructor(context: Context, dbHelper: DbHelper, preferencesHelper: PreferencesHelper, apiHelper: ApiHelper) : DataManager {
++
++    private var mApiHelper: ApiHelper = apiHelper
++    private var mContext: Context = context
++    private var mDbHelper: DbHelper = dbHelper
++    private var mPreferencesHelper: PreferencesHelper = preferencesHelper
++
++    private var compositeDisposable = CompositeDisposable()
++
++    override var currentUserName: String
++        get() = mPreferencesHelper.currentUserName
++        set(value) {
++            mPreferencesHelper.currentUserName = value
++        }
++
++    override fun getMovieListApiCall(pageNo: Int): Single<SearchDataClass> {
++
++        compositeDisposable.add(mApiHelper.getMovieListApiCall(pageNo)
++                .subscribeOn(Schedulers.computation())
++                .subscribe({ movieResponse ->
++                    for (movie in movieResponse.Search) {
++                        insertMovie(movie)
++                    }
++                },
++                        {
++                            //view.error(throwable)
++                        }))
++
++        return mApiHelper.getMovieListApiCall(pageNo)
++    }
++
++    override fun getMovieDetailsApiCall(id: String): Single<MoviesDataClass> {
++        compositeDisposable.add(mApiHelper.getMovieDetailsApiCall(id)
++                .subscribeOn(Schedulers.computation())
++                .subscribe({ movieResponse ->
++                    updateMovie(movieResponse)
++
++                },
++                        {
++                            //view.error(throwable)
++                        }))
++        return mApiHelper.getMovieDetailsApiCall(id)
++    }
++
++
++    override fun insertMovie(movie: MoviesDataClass) {
++        mDbHelper.insertMovie(movie)
++    }
++
++    override fun updateMovie(movie: MoviesDataClass) {
++        mDbHelper.updateMovie(movie)
++    }
++
++    override fun getMovieById(id: String): MoviesDataClass {
++        return mDbHelper.getMovieById(id)
++    }
++
++    override fun getMovieListFromDB(): LiveData<List<MoviesDataClass>> {
++
++        val mSectionLive = MediatorLiveData<List<MoviesDataClass>>()
++
++        val movieList = mDbHelper.getMovieListFromDB()
++
++        mSectionLive.addSource(movieList,{
++                if (it == null || it.isEmpty()) {
++                    getMovieListApiCall(1)
++                } else {
++                    mSectionLive.removeSource(movieList)
++                    mSectionLive.setValue(it)
++                }
++
++        })
++        return mSectionLive
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/DataManager.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/DataManager.kt	(date 1525260537000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/DataManager.kt	(date 1525260537000)
+@@ -0,0 +1,9 @@
++package imdb.assignment.umesh0492.data
++
++import imdb.assignment.umesh0492.data.local.db.DbHelper
++import imdb.assignment.umesh0492.data.local.pref.PreferencesHelper
++import imdb.assignment.umesh0492.data.remote.ApiHelper
++
++interface DataManager : DbHelper, PreferencesHelper, ApiHelper {
++
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/data/MoviesDatabase.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/data/MoviesDatabase.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/data/MoviesDatabase.kt	(date 1524820713000)
+@@ -1,30 +0,0 @@
+-package imdb.assignment.umesh0492.data
+-
+-import android.arch.persistence.room.Database
+-import android.arch.persistence.room.Room
+-import android.arch.persistence.room.RoomDatabase
+-import android.content.Context
+-import imdb.assignment.umesh0492.ui.movieList.data.database.MoviesDAO
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-
+-@Database(entities = [(MoviesDataClass::class)], version = 1)
+-abstract class MoviesDatabase : RoomDatabase() {
+-
+-    abstract fun getMoviesDAO(): MoviesDAO
+-
+-    companion object {
+-        private var INSTANCE: MoviesDatabase? = null
+-        fun getDatabase(context: Context): MoviesDatabase? {
+-            if (INSTANCE == null) {
+-                synchronized(MoviesDatabase::class.java) {
+-                    if (INSTANCE == null) {
+-                        INSTANCE = Room.databaseBuilder(context.applicationContext,
+-                                MoviesDatabase::class.java, "movies_database")
+-                                .build()
+-                    }
+-                }
+-            }
+-            return INSTANCE
+-        }
+-    }
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/dataBinding/DataBindingComponent.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/dataBinding/DataBindingComponent.kt	(date 1525091961000)
++++ app/src/main/java/imdb/assignment/umesh0492/dataBinding/DataBindingComponent.kt	(date 1525091961000)
+@@ -0,0 +1,3 @@
++package imdb.assignment.umesh0492.dataBinding
++
++interface DataBindingComponent
+Index: app/src/main/java/imdb/assignment/umesh0492/di/builder/ActivityBuilder.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/builder/ActivityBuilder.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/builder/ActivityBuilder.kt	(date 1525330639000)
+@@ -0,0 +1,19 @@
++package imdb.assignment.umesh0492.di.builder
++
++import dagger.Module
++import dagger.android.ContributesAndroidInjector
++import imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivity
++import imdb.assignment.umesh0492.ui.movieList.MovieActivity
++import imdb.assignment.umesh0492.ui.movieList.di.MovieDetailModule
++import imdb.assignment.umesh0492.ui.movieList.di.MovieListModule
++
++
++@Module
++abstract class ActivityBuilder {
++
++    @ContributesAndroidInjector(modules = [MovieListModule::class])
++    abstract fun bindMovieActivity(): MovieActivity
++
++    @ContributesAndroidInjector(modules = [MovieDetailModule::class])
++    abstract fun bindMovieDetailActivity(): MovieDetailActivity
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/di/components/AppComponent.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/components/AppComponent.kt	(date 1525326777000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/components/AppComponent.kt	(date 1525326777000)
+@@ -0,0 +1,33 @@
++package imdb.assignment.umesh0492.di.components
++
++import dagger.BindsInstance
++import dagger.Component
++import dagger.android.AndroidInjectionModule
++import imdb.assignment.umesh0492.App
++import imdb.assignment.umesh0492.di.builder.ActivityBuilder
++import imdb.assignment.umesh0492.di.modules.ApplicationModule
++import imdb.assignment.umesh0492.di.modules.NetworkModule
++import imdb.assignment.umesh0492.di.modules.StorageModule
++import javax.inject.Singleton
++
++@Singleton
++@Component(modules =
++[AndroidInjectionModule::class,
++    ApplicationModule::class,
++    NetworkModule::class,
++    StorageModule::class,
++    ActivityBuilder::class])
++
++interface AppComponent {
++    fun inject(app: App)
++
++    @Component.Builder
++    interface Builder {
++
++        @BindsInstance
++        fun application(app: App): Builder
++
++        fun build(): AppComponent
++
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/di/modules/ApplicationModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/modules/ApplicationModule.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/modules/ApplicationModule.kt	(date 1525330639000)
+@@ -0,0 +1,32 @@
++package imdb.assignment.umesh0492.di.modules
++
++import android.content.Context
++import dagger.Module
++import dagger.Provides
++import imdb.assignment.umesh0492.App
++import imdb.assignment.umesh0492.data.AppDataManager
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.util.rx.AppSchedulerProvider
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++import javax.inject.Singleton
++
++@Module
++class ApplicationModule{
++
++    @Provides
++    @Singleton
++    fun provideContext(application: App): Context {
++        return application
++    }
++
++    @Provides
++    @Singleton
++    fun provideDataManager(appDataManager: AppDataManager): DataManager {
++        return appDataManager
++    }
++
++    @Provides
++    fun provideSchedulerProvider(): SchedulerProvider {
++        return AppSchedulerProvider()
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/di/modules/NetworkModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/modules/NetworkModule.kt	(date 1525328211000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/modules/NetworkModule.kt	(date 1525328211000)
+@@ -0,0 +1,78 @@
++package imdb.assignment.umesh0492.di.modules
++
++import android.content.Context
++import com.facebook.stetho.okhttp3.StethoInterceptor
++import com.squareup.moshi.Moshi
++import dagger.Module
++import dagger.Provides
++import imdb.assignment.umesh0492.BuildConfig
++import imdb.assignment.umesh0492.data.remote.ApiHelper
++import imdb.assignment.umesh0492.data.remote.AppApi
++import imdb.assignment.umesh0492.util.ApplicationJsonAdapterFactory
++import okhttp3.Cache
++import okhttp3.OkHttpClient
++import retrofit2.Retrofit
++import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
++import retrofit2.converter.moshi.MoshiConverterFactory
++import java.util.concurrent.TimeUnit
++import javax.inject.Singleton
++
++@Module
++class NetworkModule{
++
++    @Provides
++    @Singleton
++    fun provideAppApi(appApi: AppApi): ApiHelper {
++        return appApi
++    }
++
++    @Provides
++    @Singleton
++    fun provideMoshi(): Moshi {
++        return Moshi.Builder()
++                .add(ApplicationJsonAdapterFactory.INSTANCE)
++                .build()
++    }
++
++    @Provides
++    @Singleton
++    fun provideRetrofit(moshi: Moshi,
++                        rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
++                        okHttpClient: OkHttpClient): Retrofit {
++        return  Retrofit.Builder()
++                .baseUrl(BuildConfig.BASE_URL)
++                .addConverterFactory(MoshiConverterFactory.create(moshi))
++                .addCallAdapterFactory(rxJava2CallAdapterFactory)
++                .client(okHttpClient)
++                .build()
++    }
++
++    @Provides
++    @Singleton
++    fun providesOkHttpClient(cache: Cache): OkHttpClient {
++        val client = OkHttpClient.Builder()
++                .cache(cache)
++                .connectTimeout(10, TimeUnit.SECONDS)
++                .writeTimeout(30, TimeUnit.SECONDS)
++                .readTimeout(10, TimeUnit.SECONDS)
++
++        if (BuildConfig.DEBUG)
++            client.addNetworkInterceptor(StethoInterceptor())
++
++        return client.build()
++    }
++
++    @Provides
++    @Singleton
++    fun providesOkhttpCache(context: Context): Cache {
++        val cacheSize = 10 * 1024 * 1024 // 10 MB
++        return Cache(context.cacheDir, cacheSize.toLong())
++    }
++
++    @Provides
++    @Singleton
++    fun providesRxJavaCallAdapterFactory(): RxJava2CallAdapterFactory {
++        return RxJava2CallAdapterFactory.create()
++    }
++
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/di/modules/StorageModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/modules/StorageModule.kt	(date 1525257748000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/modules/StorageModule.kt	(date 1525257748000)
+@@ -0,0 +1,49 @@
++package imdb.assignment.umesh0492.di.modules
++
++import android.arch.persistence.room.Room
++import android.content.Context
++import dagger.Module
++import dagger.Provides
++import imdb.assignment.umesh0492.data.local.db.AppDBHelper
++import imdb.assignment.umesh0492.data.local.db.AppDatabase
++import imdb.assignment.umesh0492.data.local.db.DbHelper
++import imdb.assignment.umesh0492.data.local.pref.AppPreferences
++import imdb.assignment.umesh0492.data.local.pref.PreferencesHelper
++import imdb.assignment.umesh0492.di.ConfigConst
++import imdb.assignment.umesh0492.di.qualifiers.DatabaseInfo
++import imdb.assignment.umesh0492.di.qualifiers.PreferenceInfo
++import javax.inject.Singleton
++
++@Module
++class StorageModule{
++
++    @Provides
++    @DatabaseInfo
++    fun provideDatabaseName(): String {
++        return ConfigConst.DB_NAME
++    }
++    @Provides
++    @Singleton
++    fun provideAppDatabase(@DatabaseInfo dbName: String, context: Context): AppDatabase {
++        return Room.databaseBuilder(context, AppDatabase::class.java, dbName).fallbackToDestructiveMigration()
++                .build()
++    }
++
++    @Provides
++    @Singleton
++    fun provideDbHelper(appDbHelper: AppDBHelper): DbHelper {
++        return appDbHelper
++    }
++
++    @Provides
++    @PreferenceInfo
++    fun providePreferenceName(): String {
++        return ConfigConst.PREF_NAME
++    }
++
++    @Provides
++    @Singleton
++    fun providePreferencesHelper(appPreferencesHelper: AppPreferences): PreferencesHelper {
++        return appPreferencesHelper
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApiInfo.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApiInfo.kt	(date 1525244023000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApiInfo.kt	(date 1525244023000)
+@@ -0,0 +1,8 @@
++package imdb.assignment.umesh0492.di.qualifiers
++
++import javax.inject.Qualifier
++
++
++@Qualifier
++@Retention(AnnotationRetention.RUNTIME)
++annotation class ApiInfo
+Index: app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApplicationContext.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApplicationContext.kt	(date 1525244023000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/ApplicationContext.kt	(date 1525244023000)
+@@ -0,0 +1,8 @@
++package imdb.assignment.umesh0492.di.qualifiers
++
++import javax.inject.Qualifier
++
++
++@Qualifier
++@Retention(AnnotationRetention.RUNTIME)
++annotation class ApplicationContext
+Index: app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/DatabaseInfo.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/DatabaseInfo.kt	(date 1525244023000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/DatabaseInfo.kt	(date 1525244023000)
+@@ -0,0 +1,8 @@
++package imdb.assignment.umesh0492.di.qualifiers
++
++import javax.inject.Qualifier
++
++
++@Qualifier
++@Retention(AnnotationRetention.RUNTIME)
++annotation class DatabaseInfo
+Index: app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PerActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PerActivity.kt	(date 1525244023000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PerActivity.kt	(date 1525244023000)
+@@ -0,0 +1,7 @@
++package imdb.assignment.umesh0492.di.qualifiers
++
++import javax.inject.Scope
++
++@Scope
++@Retention(AnnotationRetention.RUNTIME)
++annotation class PerActivity
+Index: app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PreferenceInfo.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PreferenceInfo.kt	(date 1525244023000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/qualifiers/PreferenceInfo.kt	(date 1525244023000)
+@@ -0,0 +1,7 @@
++package imdb.assignment.umesh0492.di.qualifiers
++
++import javax.inject.Qualifier
++
++@Qualifier
++@Retention(AnnotationRetention.RUNTIME)
++annotation class PreferenceInfo
+Index: app/src/main/java/imdb/assignment/umesh0492/di/ConfigConst.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/di/ConfigConst.kt	(date 1525256400000)
++++ app/src/main/java/imdb/assignment/umesh0492/di/ConfigConst.kt	(date 1525256400000)
+@@ -0,0 +1,9 @@
++package imdb.assignment.umesh0492.di
++
++class ConfigConst{
++    companion object {
++        const val DB_NAME = "imdb.db"
++        const val DB_VERSION = 1
++        const val PREF_NAME = "imdb-prefs"
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/base/BaseActivity.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/base/BaseActivity.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/base/BaseActivity.kt	(date 1525332212000)
+@@ -1,11 +1,73 @@
+-package imdb.assignment.umesh0492.base
++package imdb.assignment.umesh0492.ui.base
+ 
++import android.annotation.TargetApi
++import android.content.pm.PackageManager
++import android.databinding.DataBindingUtil
++import android.databinding.ViewDataBinding
++import android.os.Build
+ import android.os.Bundle
++import android.support.annotation.LayoutRes
++import android.support.annotation.Nullable
+ import android.support.v7.app.AppCompatActivity
++import android.widget.ProgressBar
++import dagger.android.AndroidInjection
++import imdb.assignment.umesh0492.util.NetworkUtils
++
++abstract class BaseActivity<T : ViewDataBinding, V : BaseViewModel<*>> : AppCompatActivity() {
++
++    var viewDataBinding: T? = null
++        private set
++    private var mViewModel: V? = null
++
++    /**
++     * Override for set binding variable
++     *
++     * @return variable id
++     */
++    abstract val bindingVariable: Int
++
++    /**
++     * @return layout resource id
++     */
++    @get:LayoutRes
++    abstract val layoutId: Int
+ 
+-abstract class BaseActivity : AppCompatActivity(), BaseView {
+-    override fun onCreate(savedInstanceState: Bundle?) {
++    /**
++     * Override for set view model
++     *
++     * @return view model instance
++     */
++    abstract val viewModel: V
++
++    val isNetworkConnected: Boolean
++        get() = NetworkUtils.isNetworkConnected(applicationContext)
++
++    override fun onCreate(@Nullable savedInstanceState: Bundle?) {
++        performDependencyInjection()
+         super.onCreate(savedInstanceState)
+-        setUpView()
++        performDataBinding()
++    }
++
++    @TargetApi(Build.VERSION_CODES.M)
++    fun hasPermission(permission: String): Boolean {
++        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
++    }
++
++    private fun performDependencyInjection() {
++        AndroidInjection.inject(this)
++    }
++
++    @TargetApi(Build.VERSION_CODES.M)
++    fun requestPermissionsSafely(permissions: Array<String>, requestCode: Int) {
++        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
++            requestPermissions(permissions, requestCode)
++        }
++    }
++
++    private fun performDataBinding() {
++        viewDataBinding = DataBindingUtil.setContentView(this, layoutId)
++        this.mViewModel = if (mViewModel == null) viewModel else mViewModel
++        viewDataBinding!!.setVariable(bindingVariable, mViewModel)
++        viewDataBinding!!.executePendingBindings()
+     }
+ }
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/base/BaseViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/base/BaseViewModel.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/base/BaseViewModel.kt	(date 1525330639000)
+@@ -0,0 +1,25 @@
++package imdb.assignment.umesh0492.ui.base
++
++import android.arch.lifecycle.ViewModel
++import android.databinding.ObservableBoolean
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++import io.reactivex.disposables.CompositeDisposable
++
++abstract class BaseViewModel<T>
++constructor(val dataManager: DataManager,
++                    val schedulerProvider: SchedulerProvider) : ViewModel() {
++
++    val isLoading = ObservableBoolean(false)
++
++    val compositeDisposable: CompositeDisposable = CompositeDisposable()
++
++    override fun onCleared() {
++        compositeDisposable.dispose()
++        super.onCleared()
++    }
++
++    fun setIsLoading(isLoading: Boolean) {
++        this.isLoading.set(isLoading)
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/base/ViewModelProviderFactory.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/base/ViewModelProviderFactory.kt	(date 1525327509000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/base/ViewModelProviderFactory.kt	(date 1525327509000)
+@@ -0,0 +1,19 @@
++package imdb.assignment.umesh0492.ui.base
++
++import android.arch.lifecycle.ViewModel
++import android.arch.lifecycle.ViewModelProvider
++
++
++/**
++ * A provider factory that persists ViewModels [ViewModel].
++ * Used if the view model has a parameterized constructor.
++ */
++class ViewModelProviderFactory<V : Any>(private val viewModel: V) : ViewModelProvider.Factory {
++
++    override fun <T : ViewModel> create(modelClass: Class<T>): T {
++        if (modelClass.isAssignableFrom(viewModel::class.java)) {
++            return viewModel as T
++        }
++        throw IllegalArgumentException("Unknown class name")
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/di/MovieDetailModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/di/MovieDetailModule.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/di/MovieDetailModule.kt	(date 1525330639000)
+@@ -0,0 +1,26 @@
++package imdb.assignment.umesh0492.ui.movieList.di
++
++import dagger.Module
++import dagger.Provides
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivityVM
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++
++
++@Module
++class MovieDetailModule{
++
++   /* @Provides
++    fun movieViewModelProvider(movieViewModel: MovieActivityVM): ViewModelProvider.Factory {
++        return ViewModelProviderFactory(movieViewModel)
++    }*/
++
++    @Provides
++    fun provideMovieDetailViewModel(dataManager: DataManager, schedulerProvider: SchedulerProvider): MovieDetailActivityVM {
++        return MovieDetailActivityVM(MoviesDataClass("",
++                "","","","",
++                "","","","","","",""),
++                dataManager, schedulerProvider)
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailRepository.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailRepository.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailRepository.kt	(date 1524820713000)
+@@ -1,15 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieDetail.network
+-
+-import imdb.assignment.umesh0492.App
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import retrofit2.Call
+-import retrofit2.Callback
+-
+-class MoviesDetailRepository {
+-
+-    fun getMovie(callback: Callback<MoviesDataClass>, id: String) {
+-        val service = App.instance.retrofit.create(MoviesDetailService::class.java)
+-        val news: Call<MoviesDataClass> = service.getMovie(id)
+-        news.enqueue(callback)
+-    }
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailService.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailService.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/network/MoviesDetailService.kt	(date 1524820713000)
+@@ -1,11 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieDetail.network
+-
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import retrofit2.Call
+-import retrofit2.http.GET
+-import retrofit2.http.Query
+-
+-interface MoviesDetailService {
+-    @GET("?apikey=e22bb521")
+-    fun getMovie(@Query(value = "i") id: String): Call<MoviesDataClass>
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492.ui.movieDetail\n\nimport android.databinding.DataBindingUtil\nimport android.os.Build\nimport android.os.Bundle\nimport android.transition.Explode\nimport android.view.Window\nimport com.bumptech.glide.Glide\nimport imdb.assignment.umesh0492.base.BaseActivity\nimport imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass\nimport rentomojo.test.umesh0492.R\nimport rentomojo.test.umesh0492.databinding.ActivityMovieDetailBinding\n\nclass MovieDetailActivity : BaseActivity() {\n\n    lateinit var imdbID: String\n    lateinit var binding: ActivityMovieDetailBinding\n    lateinit var vm: MovieDetailActivityVM\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        val titleString = intent.getStringExtra(\"Title\")\n        val yearString = intent.getStringExtra(\"Year\")\n        imdbID = intent.getStringExtra(\"imdbID\")\n        val posterUrl = intent.getStringExtra(\"Poster\")\n\n        binding.movieTitle.text = titleString\n        binding.year.text = yearString\n\n        Glide.with(binding.poster).load(posterUrl).into(binding.poster)\n\n        var movie = MoviesDataClass(Title = titleString,\n                Year = yearString,\n                Poster = posterUrl,\n                imdbID = imdbID,\n                Actors = \"\",\n                Director = \"\",\n                Plot = \"\",\n                Genre = \"\",\n                imdbRating = \"\",\n                imdbVotes = \"\",\n                Language = \"\",\n                Writer = \"\")\n\n        vm = MovieDetailActivityVM(movie)\n        vm.getMovie(imdbID)\n        binding.vm = vm\n    }\n\n    override fun setUpView() {\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {\n            with(window) {\n                requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)\n                // set an exit transition\n                exitTransition = Explode()\n            }\n        }\n        binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail)\n        supportActionBar?.setDisplayHomeAsUpEnabled(true)\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivity.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivity.kt	(date 1525328049000)
+@@ -1,28 +1,51 @@
+ package imdb.assignment.umesh0492.ui.movieDetail
+ 
+-import android.databinding.DataBindingUtil
+ import android.os.Build
+ import android.os.Bundle
+ import android.transition.Explode
+ import android.view.Window
+ import com.bumptech.glide.Glide
+-import imdb.assignment.umesh0492.base.BaseActivity
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import rentomojo.test.umesh0492.R
+-import rentomojo.test.umesh0492.databinding.ActivityMovieDetailBinding
++import imdb.assignment.umesh0492.BR
++import imdb.assignment.umesh0492.R
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.databinding.ActivityMovieDetailBinding
++import imdb.assignment.umesh0492.ui.base.BaseActivity
++import javax.inject.Inject
+ 
+-class MovieDetailActivity : BaseActivity() {
++class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding, MovieDetailActivityVM>() {
+ 
+     lateinit var imdbID: String
+     lateinit var binding: ActivityMovieDetailBinding
+-    lateinit var vm: MovieDetailActivityVM
++
++    @Inject
++    override
++    lateinit var viewModel: MovieDetailActivityVM
++
++    override val bindingVariable: Int
++        get() = BR.vm
++
++    override val layoutId: Int
++        get() = R.layout.activity_movie_detail
++
++
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
++        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
++            with(window) {
++                requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
++                // set an exit transition
++                exitTransition = Explode()
++            }
++        }
++        supportActionBar?.setDisplayHomeAsUpEnabled(true)
++
+         val titleString = intent.getStringExtra("Title")
+         val yearString = intent.getStringExtra("Year")
+         imdbID = intent.getStringExtra("imdbID")
+         val posterUrl = intent.getStringExtra("Poster")
+ 
++        binding = viewDataBinding!!
++
+         binding.movieTitle.text = titleString
+         binding.year.text = yearString
+ 
+@@ -41,20 +64,13 @@
+                 Language = "",
+                 Writer = "")
+ 
+-        vm = MovieDetailActivityVM(movie)
+-        vm.getMovie(imdbID)
+-        binding.vm = vm
++        viewModel.movie.set(movie)
++
++        viewModel.getMovie(imdbID)
++        binding.vm = viewModel
+     }
+ 
+-    override fun setUpView() {
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+-            with(window) {
+-                requestFeature(Window.FEATURE_CONTENT_TRANSITIONS)
+-                // set an exit transition
+-                exitTransition = Explode()
+-            }
+-        }
+-        binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail)
+-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+-    }
++    /*override fun setUpView() {
++
++    }*/
+ }
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivityVM.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492.ui.movieDetail\n\nimport android.databinding.ObservableBoolean\nimport android.databinding.ObservableField\nimport imdb.assignment.umesh0492.ui.movieDetail.network.MoviesDetailRepository\nimport imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass\nimport retrofit2.Call\nimport retrofit2.Callback\nimport retrofit2.Response\n\nclass MovieDetailActivityVM(movieIncomplete: MoviesDataClass) {\n\n    var movie: ObservableField<MoviesDataClass> = ObservableField(movieIncomplete)\n    private val repo: MoviesDetailRepository = MoviesDetailRepository()\n    var isLoading: ObservableBoolean = ObservableBoolean(false)\n\n    fun getMovie(imdbID: String) {\n        isLoading.set(true)\n        repo.getMovie(object : Callback<MoviesDataClass> {\n            override fun onResponse(call: Call<MoviesDataClass>, response: Response<MoviesDataClass>) {\n                if (response.isSuccessful && response.body() != null) {\n                    movie.set(response.body())\n                } else {\n                    isLoading.set(false)\n                }\n            }\n\n            override fun onFailure(call: Call<MoviesDataClass>, t: Throwable) {\n                isLoading.set(false)\n            }\n        }, id = imdbID)\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivityVM.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieDetail/MovieDetailActivityVM.kt	(date 1525331535000)
+@@ -1,33 +1,31 @@
+ package imdb.assignment.umesh0492.ui.movieDetail
+ 
+-import android.databinding.ObservableBoolean
+ import android.databinding.ObservableField
+-import imdb.assignment.umesh0492.ui.movieDetail.network.MoviesDetailRepository
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import retrofit2.Call
+-import retrofit2.Callback
+-import retrofit2.Response
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.ui.base.BaseViewModel
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++import io.reactivex.schedulers.Schedulers
+ 
+-class MovieDetailActivityVM(movieIncomplete: MoviesDataClass) {
++class MovieDetailActivityVM(movie: MoviesDataClass, dataManager: DataManager,
++                            schedulerProvider: SchedulerProvider)
++    : BaseViewModel<Any?>(dataManager = dataManager, schedulerProvider = schedulerProvider) {
+ 
+-    var movie: ObservableField<MoviesDataClass> = ObservableField(movieIncomplete)
+-    private val repo: MoviesDetailRepository = MoviesDetailRepository()
+-    var isLoading: ObservableBoolean = ObservableBoolean(false)
++    var movie: ObservableField<MoviesDataClass> = ObservableField(movie)
+ 
+     fun getMovie(imdbID: String) {
+         isLoading.set(true)
+-        repo.getMovie(object : Callback<MoviesDataClass> {
+-            override fun onResponse(call: Call<MoviesDataClass>, response: Response<MoviesDataClass>) {
+-                if (response.isSuccessful && response.body() != null) {
+-                    movie.set(response.body())
+-                } else {
++
++        compositeDisposable.add(dataManager.getMovieDetailsApiCall(imdbID)
++                .subscribeOn(schedulerProvider.io())
++                .observeOn(schedulerProvider.ui())
++                .subscribe({ movieResponse ->
+                     isLoading.set(false)
+-                }
+-            }
+-
+-            override fun onFailure(call: Call<MoviesDataClass>, t: Throwable) {
+-                isLoading.set(false)
+-            }
+-        }, id = imdbID)
++                    dataManager.updateMovie(movieResponse)
++                    movie.set(movieResponse)
++                },
++                        {
++                            isLoading.set(false)
++                        }))
+     }
+ }
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/MoviesDataClass.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/MoviesDataClass.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/MoviesDataClass.kt	(date 1524820713000)
+@@ -1,21 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.model
+-
+-import android.arch.persistence.room.Entity
+-import android.arch.persistence.room.PrimaryKey
+-import android.databinding.BaseObservable
+-import se.ansman.kotshi.JsonSerializable
+-
+-@JsonSerializable
+-@Entity(tableName = "movie_table")
+-data class MoviesDataClass(var Title: String,
+-                           var Year: String,
+-                           @PrimaryKey val imdbID: String,
+-                           var Poster: String,
+-                           var Genre: String?,
+-                           var Director: String?,
+-                           var Writer: String?,
+-                           var Actors: String?,
+-                           var Plot: String?,
+-                           var Language: String?,
+-                           var imdbRating: String?,
+-                           var imdbVotes: String?) : BaseObservable()
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/RatingDataClass.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/RatingDataClass.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/RatingDataClass.kt	(date 1524820713000)
+@@ -1,6 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.model
+-
+-import se.ansman.kotshi.JsonSerializable
+-
+-@JsonSerializable
+-data class RatingDataClass(val Source: String, val Value: String)
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/SearchDataClass.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/SearchDataClass.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/model/SearchDataClass.kt	(date 1524820713000)
+@@ -1,6 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.model
+-
+-import se.ansman.kotshi.JsonSerializable
+-
+-@JsonSerializable
+-data class SearchDataClass(val Search: List<MoviesDataClass>, val totalResults: String)
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesRepository.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesRepository.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesRepository.kt	(date 1524820713000)
+@@ -1,62 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.network
+-
+-import android.arch.lifecycle.LiveData
+-import android.os.AsyncTask
+-import imdb.assignment.umesh0492.App
+-import imdb.assignment.umesh0492.data.MoviesDatabase
+-import imdb.assignment.umesh0492.ui.movieList.data.database.MoviesDAO
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import imdb.assignment.umesh0492.ui.movieList.data.model.SearchDataClass
+-import retrofit2.Call
+-import retrofit2.Callback
+-import retrofit2.Response
+-
+-class MoviesRepository() {
+-
+-    private var mMoviesDao: MoviesDAO
+-    private var movieList: LiveData<List<MoviesDataClass>>
+-
+-    fun getMovieList(callback: Callback<SearchDataClass>, pageNo: Int) {
+-        val service = App.instance.retrofit.create(MoviesService::class.java)
+-        val movies: Call<SearchDataClass> = service.getMovieList("an", pageNo = pageNo.toString())
+-        movies.enqueue(object : Callback<SearchDataClass> {
+-
+-            override fun onResponse(call: Call<SearchDataClass>?, response: Response<SearchDataClass>?) {
+-                if (response?.body() != null && response.body()!!.Search.isNotEmpty()) {
+-                    for (movie in response.body()!!.Search) {
+-                        insert(movie)
+-                    }
+-                    callback.onResponse(call, response)
+-                }
+-
+-            }
+-
+-            override fun onFailure(call: Call<SearchDataClass>?, t: Throwable?) {
+-                callback.onFailure(call, t)
+-            }
+-
+-        })
+-    }
+-
+-    fun getMovieList(): LiveData<List<MoviesDataClass>> {
+-        return movieList
+-    }
+-
+-    init {
+-        val db = MoviesDatabase.getDatabase(App.instance)
+-        mMoviesDao = db!!.getMoviesDAO()
+-        movieList = mMoviesDao.allMovies
+-    }
+-
+-    private class InsertAsyncTask internal constructor(private val mAsyncTaskDao: MoviesDAO) : AsyncTask<MoviesDataClass, Void, Void>() {
+-
+-        override fun doInBackground(vararg params: MoviesDataClass): Void? {
+-            mAsyncTaskDao.insert(params[0])
+-            return null
+-        }
+-    }
+-
+-    fun insert(movie: MoviesDataClass) {
+-        InsertAsyncTask(mMoviesDao).execute(movie)
+-    }
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesService.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesService.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/data/network/MoviesService.kt	(date 1524820713000)
+@@ -1,11 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList.data.network
+-
+-import imdb.assignment.umesh0492.ui.movieList.data.model.SearchDataClass
+-import retrofit2.Call
+-import retrofit2.http.GET
+-import retrofit2.http.Query
+-
+-interface MoviesService {
+-    @GET("?apikey=e22bb521")
+-    fun getMovieList(@Query(value = "s") search: String, @Query(value = "page") pageNo: String): Call<SearchDataClass>
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/di/MovieListModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/di/MovieListModule.kt	(date 1525328426000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/di/MovieListModule.kt	(date 1525328426000)
+@@ -0,0 +1,16 @@
++package imdb.assignment.umesh0492.ui.movieList.di
++
++import dagger.Module
++import dagger.Provides
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.ui.movieList.MovieActivityVM
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++
++@Module
++class MovieListModule {
++
++    @Provides
++    fun provideMovieViewModel(dataManager: DataManager, schedulerProvider: SchedulerProvider): MovieActivityVM {
++        return MovieActivityVM(dataManager, schedulerProvider)
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/listner/UpdateUIListener.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492.ui.movieList.listner\n\nimport imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass\n\ninterface UpdateUIListener {\n    fun updateUI()\n    fun startMovieDetailActivity(movies: MoviesDataClass)\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/listner/UpdateUIListener.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/listner/UpdateUIListener.kt	(date 1525251319000)
+@@ -1,6 +1,6 @@
+ package imdb.assignment.umesh0492.ui.movieList.listner
+ 
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
+ 
+ interface UpdateUIListener {
+     fun updateUI()
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MainActivityVM.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MainActivityVM.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MainActivityVM.kt	(date 1524820713000)
+@@ -1,89 +0,0 @@
+-package imdb.assignment.umesh0492.ui.movieList
+-
+-import android.arch.lifecycle.LiveData
+-import android.arch.lifecycle.Observer
+-import android.databinding.ObservableBoolean
+-import android.os.Parcel
+-import android.os.Parcelable
+-import imdb.assignment.umesh0492.network.NetworkCallListener
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import imdb.assignment.umesh0492.ui.movieList.data.model.SearchDataClass
+-import imdb.assignment.umesh0492.ui.movieList.data.network.MoviesRepository
+-import imdb.assignment.umesh0492.ui.movieList.listner.UpdateUIListener
+-import retrofit2.Call
+-import retrofit2.Callback
+-import retrofit2.Response
+-
+-class MainActivityVM() : Parcelable {
+-
+-    private val repo: MoviesRepository = MoviesRepository()
+-    var movieList: LiveData<List<MoviesDataClass>> = repo.getMovieList()
+-
+-    lateinit var uiListener: UpdateUIListener
+-
+-    var isLoading: ObservableBoolean = ObservableBoolean(false)
+-    var isLastPage: Boolean = false
+-    private var pageNo: Int = 1
+-
+-    constructor(parcel: Parcel) : this()
+-
+-    constructor(activity: MainActivity) : this() {
+-        movieList.observe(activity, Observer<List<MoviesDataClass>> {
+-            uiListener.updateUI()
+-        })
+-    }
+-
+-    fun setUIListener(listener: UpdateUIListener) {
+-        this.uiListener = listener
+-    }
+-
+-    fun getMovieList(listener: NetworkCallListener<SearchDataClass>) {
+-        isLoading.set(true)
+-        repo.getMovieList(object : Callback<SearchDataClass> {
+-            override fun onResponse(call: Call<SearchDataClass>, response: Response<SearchDataClass>) {
+-                if (response.body() != null && response.body()!!.Search.isNotEmpty()) {
+-                    val data = response.body()!!
+-                    isLoading.set(false)
+-                    if (movieList.value!!.isNotEmpty()) {
+-                        pageNo = movieList.value!!.size / data.Search.size
+-                    }
+-                    pageNo++
+-                    isLastPage = (data.totalResults.toInt() / data.Search.size) < 1
+-                    uiListener.updateUI()
+-                    listener.onSuccess(response.body()!!)
+-
+-                } else {
+-                    isLoading.set(false)
+-                    listener.onFailure()
+-                }
+-            }
+-
+-            override fun onFailure(call: Call<SearchDataClass>, t: Throwable) {
+-                isLoading.set(false)
+-                listener.onFailure()
+-            }
+-        }, pageNo)
+-    }
+-
+-    fun onItemClicked(movies: MoviesDataClass) {
+-        uiListener.startMovieDetailActivity(movies)
+-    }
+-
+-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+-
+-    }
+-
+-    override fun describeContents(): Int {
+-        return 0
+-    }
+-
+-    companion object CREATOR : Parcelable.Creator<MainActivityVM> {
+-        override fun createFromParcel(parcel: Parcel): MainActivityVM {
+-            return MainActivityVM(parcel)
+-        }
+-
+-        override fun newArray(size: Int): Array<MainActivityVM?> {
+-            return arrayOfNulls(size)
+-        }
+-    }
+-}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MainActivity.kt
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MainActivity.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MovieActivity.kt	(date 1525344522000)
+@@ -2,7 +2,6 @@
+ 
+ import android.app.ActivityOptions
+ import android.content.Intent
+-import android.databinding.DataBindingUtil
+ import android.nfc.tech.MifareUltralight.PAGE_SIZE
+ import android.os.Build
+ import android.os.Bundle
+@@ -11,19 +10,31 @@
+ import android.support.v7.widget.RecyclerView
+ import android.view.View
+ import android.widget.Toast
+-import imdb.assignment.umesh0492.base.BaseActivity
++import dagger.android.AndroidInjection
++import imdb.assignment.umesh0492.BR
++import imdb.assignment.umesh0492.R
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import imdb.assignment.umesh0492.databinding.ActivityMainBinding
+ import imdb.assignment.umesh0492.network.NetworkCallListener
++import imdb.assignment.umesh0492.ui.base.BaseActivity
+ import imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivity
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import imdb.assignment.umesh0492.ui.movieList.data.model.SearchDataClass
+ import imdb.assignment.umesh0492.ui.movieList.listner.UpdateUIListener
+-import rentomojo.test.umesh0492.R
+-import rentomojo.test.umesh0492.databinding.ActivityMainBinding
++import javax.inject.Inject
++
+ 
++class MovieActivity : BaseActivity<ActivityMainBinding, MovieActivityVM>() {
+ 
+-class MainActivity : BaseActivity() {
++    @Inject
++    override
++    lateinit var viewModel: MovieActivityVM
+ 
+-    private lateinit var vm: MainActivityVM
++    override val bindingVariable: Int
++        get() = BR.vm
++
++    override val layoutId: Int
++        get() = R.layout.activity_main
++
+     private lateinit var moviesAdapter: MoviesAdapter
+ 
+     lateinit var binding: ActivityMainBinding
+@@ -33,10 +44,14 @@
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
++        AndroidInjection.inject(this)
+ 
++        binding = viewDataBinding!!
++
++        mLayoutManager = LinearLayoutManager(applicationContext)
++        binding.recyclerView.layoutManager = mLayoutManager
+         moviesAdapter = MoviesAdapter()
+-        vm = MainActivityVM(this)
+-        moviesAdapter.attachVm(vm)
++        moviesAdapter.attachVm(viewModel)
+         binding.recyclerView.adapter = moviesAdapter
+         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+@@ -47,7 +62,7 @@
+                     lastVisibleItemPosition = mLayoutManager.findLastCompletelyVisibleItemPosition()
+                 }
+ 
+-                if (!vm.isLoading.get() && !vm.isLastPage) {
++                if (!viewModel.isLoading.get() && !viewModel.isLastPage) {
+                     if (visibleItemCount + lastVisibleItemPosition >= totalItemCount
+                             && lastVisibleItemPosition >= 0
+                             && totalItemCount >= PAGE_SIZE) {
+@@ -71,16 +86,10 @@
+ 
+     }
+ 
+-    override fun setUpView() {
+-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+-        mLayoutManager = LinearLayoutManager(applicationContext)
+-        binding.recyclerView.layoutManager = mLayoutManager
+-    }
+-
+     private fun setupUIListener() {
+-        vm.setUIListener(object : UpdateUIListener {
++        viewModel.setUIListener(object : UpdateUIListener {
+             override fun startMovieDetailActivity(movies: MoviesDataClass) {
+-                var intent = Intent(this@MainActivity, MovieDetailActivity::class.java)
++                var intent = Intent(this@MovieActivity, MovieDetailActivity::class.java)
+ 
+                 intent.putExtra("Title", movies.Title)
+                 intent.putExtra("Poster", movies.Poster)
+@@ -88,7 +97,7 @@
+                 intent.putExtra("Year", movies.Year)
+ 
+                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+-                    startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this@MainActivity).toBundle())
++                    startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this@MovieActivity).toBundle())
+                 } else {
+                     startActivity(intent)
+                 }
+@@ -100,30 +109,29 @@
+         })
+     }
+ 
+-    override fun onSaveInstanceState(outState: Bundle?) {
+-        outState?.putParcelable("vm", vm)
+-        outState?.putInt("pos", lastVisibleItemPosition)
+-        super.onSaveInstanceState(outState)
+-    }
++    //todo handle config change via Rx-loader
++    /* override fun onSaveInstanceState(outState: Bundle?) {
++         outState?.putParcelable("vm", viewModel)
++         outState?.putInt("pos", lastVisibleItemPosition)
++         super.onSaveInstanceState(outState)
++     }
+ 
+-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+-        super.onRestoreInstanceState(savedInstanceState)
+-        if (savedInstanceState != null) {
+-            vm = savedInstanceState.getParcelable("vm")
+-            lastVisibleItemPosition = savedInstanceState.getInt("pos")
+-            setupUIListener()
+-        }
+-    }
++     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
++         super.onRestoreInstanceState(savedInstanceState)
++         if (savedInstanceState != null) {
++             viewModel = savedInstanceState.getParcelable("vm")
++             lastVisibleItemPosition = savedInstanceState.getInt("pos")
++             setupUIListener()
++         }
++     }*/
+ 
+     private fun getMoviesFromServer() {
+-        vm.getMovieList(object : NetworkCallListener<SearchDataClass> {
++        viewModel.getMovieList(object : NetworkCallListener<SearchDataClass> {
+             override fun onSuccess(data: SearchDataClass) {
+-                binding.moreProgressBar.visibility = View.GONE
+             }
+ 
+             override fun onFailure() {
+-                Toast.makeText(this@MainActivity, getString(R.string.network_issue), Toast.LENGTH_LONG).show()
+-                binding.moreProgressBar.visibility = View.GONE
++                Toast.makeText(this@MovieActivity, getString(R.string.network_issue), Toast.LENGTH_LONG).show()
+             }
+         })
+     }
+@@ -133,6 +141,7 @@
+     }
+ 
+     private fun updateAdapter() {
+-        moviesAdapter.insertList(vm.movieList.value!!.toMutableList())
++        if (viewModel.movieList.value != null)
++            moviesAdapter.insertList(viewModel.movieList.value!!.toMutableList())
+     }
+ }
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MovieActivityVM.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MovieActivityVM.kt	(date 1525346108000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MovieActivityVM.kt	(date 1525346108000)
+@@ -0,0 +1,59 @@
++package imdb.assignment.umesh0492.ui.movieList
++
++import android.arch.lifecycle.LiveData
++import imdb.assignment.umesh0492.data.DataManager
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.data.model.SearchDataClass
++import imdb.assignment.umesh0492.network.NetworkCallListener
++import imdb.assignment.umesh0492.ui.base.BaseViewModel
++import imdb.assignment.umesh0492.ui.movieList.listner.UpdateUIListener
++import imdb.assignment.umesh0492.util.rx.SchedulerProvider
++import io.reactivex.Scheduler
++import io.reactivex.schedulers.Schedulers
++import android.arch.lifecycle.MediatorLiveData
++import android.databinding.adapters.NumberPickerBindingAdapter.setValue
++import android.support.annotation.Nullable
++
++
++class MovieActivityVM(dataManager: DataManager,
++                      schedulerProvider: SchedulerProvider)
++    : BaseViewModel<Any?>(dataManager = dataManager, schedulerProvider = schedulerProvider) {
++
++    var movieList: LiveData<List<MoviesDataClass>> = dataManager.getMovieListFromDB()
++
++    lateinit var uiListener: UpdateUIListener
++
++    var isLastPage: Boolean = false
++    private var pageNo: Int = 1
++
++    fun setUIListener(listener: UpdateUIListener) {
++        this.uiListener = listener
++    }
++
++    fun getMovieList(listener: NetworkCallListener<SearchDataClass>) {
++        isLoading.set(true)
++
++        compositeDisposable.add(dataManager.getMovieListApiCall(pageNo)
++                .subscribeOn(schedulerProvider.io())
++                .observeOn(schedulerProvider.ui())
++                .subscribe({ movieResponse ->
++                    isLoading.set(false)
++                    if (movieList.value!=null && movieList.value!!.isNotEmpty()) {
++                        pageNo = movieList.value!!.size / movieResponse.Search.size
++                    }
++                    pageNo++
++                    isLastPage = (movieResponse.totalResults.toInt() / movieResponse.Search.size) < 1
++                    uiListener.updateUI()
++                    listener.onSuccess(movieResponse)
++                },
++                        {
++                            isLoading.set(false)
++                            listener.onFailure()
++                        }))
++
++    }
++
++    fun onItemClicked(movies: MoviesDataClass) {
++        uiListener.startMovieDetailActivity(movies)
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MoviesAdapter.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492.ui.movieList\n\nimport android.support.v7.widget.RecyclerView\nimport android.view.LayoutInflater\nimport android.view.ViewGroup\nimport com.bumptech.glide.Glide\nimport imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass\nimport rentomojo.test.umesh0492.databinding.ItemMovieBinding\n\nclass MoviesAdapter : RecyclerView.Adapter<MoviesAdapter.MovieItemViewHolder>() {\n\n    var movieList: MutableList<MoviesDataClass> = ArrayList()\n\n    private lateinit var vm: MainActivityVM\n    override fun onBindViewHolder(holder: MovieItemViewHolder, position: Int) {\n        Glide.with(holder.binding.poster).load(movieList[position].Poster).into(holder.binding.poster)\n        holder.binding.item = movieList[position]\n        holder.binding.vm = vm\n        holder.binding.executePendingBindings()\n    }\n\n    fun insertList(movieList: MutableList<MoviesDataClass>) {\n        val count = this.movieList.size\n        this.movieList = movieList\n        this.notifyItemInserted(count)\n    }\n\n    override fun getItemCount(): Int {\n        return movieList.size\n    }\n\n    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieItemViewHolder {\n        val binding = ItemMovieBinding.inflate(LayoutInflater.from(parent.context), parent, false)\n        return MovieItemViewHolder(binding)\n    }\n\n    inner class MovieItemViewHolder(val binding: ItemMovieBinding) : RecyclerView.ViewHolder(binding.root)\n\n    fun attachVm(vm: MainActivityVM) {\n        this.vm = vm\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MoviesAdapter.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/ui/movieList/MoviesAdapter.kt	(date 1525326558000)
+@@ -4,14 +4,14 @@
+ import android.view.LayoutInflater
+ import android.view.ViewGroup
+ import com.bumptech.glide.Glide
+-import imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass
+-import rentomojo.test.umesh0492.databinding.ItemMovieBinding
++import imdb.assignment.umesh0492.data.model.MoviesDataClass
++import imdb.assignment.umesh0492.databinding.ItemMovieBinding
+ 
+ class MoviesAdapter : RecyclerView.Adapter<MoviesAdapter.MovieItemViewHolder>() {
+ 
+     var movieList: MutableList<MoviesDataClass> = ArrayList()
+ 
+-    private lateinit var vm: MainActivityVM
++    private lateinit var vm: MovieActivityVM
+     override fun onBindViewHolder(holder: MovieItemViewHolder, position: Int) {
+         Glide.with(holder.binding.poster).load(movieList[position].Poster).into(holder.binding.poster)
+         holder.binding.item = movieList[position]
+@@ -36,7 +36,7 @@
+ 
+     inner class MovieItemViewHolder(val binding: ItemMovieBinding) : RecyclerView.ViewHolder(binding.root)
+ 
+-    fun attachVm(vm: MainActivityVM) {
++    fun attachVm(vm: MovieActivityVM) {
+         this.vm = vm
+     }
+ }
+Index: app/src/main/java/imdb/assignment/umesh0492/util/rx/AppSchedulerProvider.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/util/rx/AppSchedulerProvider.kt	(date 1525330639000)
++++ app/src/main/java/imdb/assignment/umesh0492/util/rx/AppSchedulerProvider.kt	(date 1525330639000)
+@@ -0,0 +1,21 @@
++package imdb.assignment.umesh0492.util.rx
++
++import io.reactivex.Scheduler
++import io.reactivex.android.schedulers.AndroidSchedulers
++import io.reactivex.schedulers.Schedulers
++
++
++class AppSchedulerProvider : SchedulerProvider {
++
++    override fun computation(): Scheduler {
++        return Schedulers.computation()
++    }
++
++    override fun io(): Scheduler {
++        return Schedulers.io()
++    }
++
++    override fun ui(): Scheduler {
++        return AndroidSchedulers.mainThread()
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/util/rx/SchedulerProvider.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/util/rx/SchedulerProvider.kt	(date 1525099370000)
++++ app/src/main/java/imdb/assignment/umesh0492/util/rx/SchedulerProvider.kt	(date 1525099370000)
+@@ -0,0 +1,11 @@
++package imdb.assignment.umesh0492.util.rx
++
++import io.reactivex.Scheduler
++
++interface SchedulerProvider{
++    fun computation(): Scheduler
++
++    fun io(): Scheduler
++
++    fun ui(): Scheduler
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/util/BindingUtils.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/util/BindingUtils.kt	(date 1525236822000)
++++ app/src/main/java/imdb/assignment/umesh0492/util/BindingUtils.kt	(date 1525236822000)
+@@ -0,0 +1,15 @@
++package imdb.assignment.umesh0492.util
++
++import android.databinding.BindingAdapter
++import android.widget.ImageView
++import com.bumptech.glide.Glide
++
++
++class BindingUtils private constructor() {
++
++    @BindingAdapter("imageUrl")
++    fun setImageUrl(imageView: ImageView, url: String) {
++        val context = imageView.context
++        Glide.with(context).load(url).into(imageView)
++    }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/util/NetworkUtils.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/util/NetworkUtils.kt	(date 1525237647000)
++++ app/src/main/java/imdb/assignment/umesh0492/util/NetworkUtils.kt	(date 1525237647000)
+@@ -0,0 +1,15 @@
++package imdb.assignment.umesh0492.util
++
++import android.content.Context
++import android.net.ConnectivityManager
++
++
++class NetworkUtils private constructor() {
++    companion object {
++       fun isNetworkConnected(context: Context): Boolean {
++           val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
++           val activeNetwork = cm.activeNetworkInfo
++           return activeNetwork != null && activeNetwork.isConnectedOrConnecting
++       }
++   }
++}
+Index: app/src/main/java/imdb/assignment/umesh0492/App.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492\n\nimport android.app.Application\nimport com.squareup.moshi.Moshi\nimport imdb.assignment.umesh0492.util.ApplicationJsonAdapterFactory\nimport retrofit2.Retrofit\nimport retrofit2.converter.moshi.MoshiConverterFactory\n\nclass App : Application() {\n\n    lateinit var retrofit: Retrofit\n\n    companion object {\n        lateinit var instance: App\n    }\n\n    override fun onCreate() {\n        super.onCreate()\n        instance = this\n        retrofit = Retrofit.Builder()\n                .baseUrl(\"http://www.omdbapi.com/?apikey=e22bb521&\")\n                .addConverterFactory(MoshiConverterFactory.create(createMoshiInstance()))\n                .build()\n    }\n\n    private fun createMoshiInstance(): Moshi {\n        return Moshi.Builder()\n                .add(ApplicationJsonAdapterFactory.INSTANCE)\n                .build()\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/imdb/assignment/umesh0492/App.kt	(date 1524820713000)
++++ app/src/main/java/imdb/assignment/umesh0492/App.kt	(date 1525331038000)
+@@ -1,31 +1,34 @@
+ package imdb.assignment.umesh0492
+ 
++import android.app.Activity
+ import android.app.Application
+-import com.squareup.moshi.Moshi
+-import imdb.assignment.umesh0492.util.ApplicationJsonAdapterFactory
+-import retrofit2.Retrofit
+-import retrofit2.converter.moshi.MoshiConverterFactory
++import com.facebook.stetho.Stetho
++import dagger.android.DispatchingAndroidInjector
++import dagger.android.HasActivityInjector
++import imdb.assignment.umesh0492.di.components.AppComponent
++import imdb.assignment.umesh0492.di.components.DaggerAppComponent
++import javax.inject.Inject
+ 
+-class App : Application() {
+ 
+-    lateinit var retrofit: Retrofit
++class App : Application(), HasActivityInjector {
+ 
+-    companion object {
+-        lateinit var instance: App
+-    }
++    @Inject
++    lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
+ 
+     override fun onCreate() {
+         super.onCreate()
+-        instance = this
+-        retrofit = Retrofit.Builder()
+-                .baseUrl("http://www.omdbapi.com/?apikey=e22bb521&")
+-                .addConverterFactory(MoshiConverterFactory.create(createMoshiInstance()))
+-                .build()
++         DaggerAppComponent.builder()
++                .application(this)
++                .build().inject(this)
++        initStetho()
++    }
++
++    private fun initStetho() {
++        if (BuildConfig.DEBUG)
++            Stetho.initializeWithDefaults(this)
+     }
+ 
+-    private fun createMoshiInstance(): Moshi {
+-        return Moshi.Builder()
+-                .add(ApplicationJsonAdapterFactory.INSTANCE)
+-                .build()
++    override fun activityInjector(): DispatchingAndroidInjector<Activity> {
++        return activityDispatchingAndroidInjector
+     }
+ }
+Index: app/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n\n    <data>\n\n        <import type=\"android.view.View\" />\n\n        <variable\n            name=\"vm\"\n            type=\"imdb.assignment.umesh0492.ui.movieList.MainActivityVM\" />\n    </data>\n\n    <android.support.constraint.ConstraintLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"match_parent\">\n\n        <android.support.v7.widget.RecyclerView\n            android:id=\"@+id/recycler_view\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"0dp\"\n            android:layout_marginBottom=\"8dp\"\n            android:layout_marginEnd=\"8dp\"\n            android:layout_marginStart=\"8dp\"\n            android:layout_marginTop=\"8dp\"\n            android:scrollbars=\"vertical\"\n            app:layout_constraintBottom_toTopOf=\"@+id/more_progress_bar\"\n            app:layout_constraintEnd_toEndOf=\"parent\"\n            app:layout_constraintHorizontal_bias=\"0.0\"\n            app:layout_constraintStart_toStartOf=\"parent\"\n            app:layout_constraintTop_toTopOf=\"parent\"/>\n\n        <ProgressBar\n            android:id=\"@+id/more_progress_bar\"\n            style=\"?android:attr/progressBarStyleLarge\"\n            android:layout_width=\"match_parent\"\n            android:animateLayoutChanges=\"true\"\n            android:animationResolution=\"1\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginBottom=\"8dp\"\n            android:indeterminate=\"true\"\n            android:visibility=\"@{vm.isLoading? View.VISIBLE : View.GONE}\"\n            app:layout_constraintBottom_toBottomOf=\"parent\"\n            app:layout_constraintEnd_toEndOf=\"@+id/recycler_view\"\n            app:layout_constraintStart_toStartOf=\"@+id/recycler_view\" />\n    </android.support.constraint.ConstraintLayout>\n</layout>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_main.xml	(date 1524820713000)
++++ app/src/main/res/layout/activity_main.xml	(date 1525346176000)
+@@ -8,7 +8,7 @@
+ 
+         <variable
+             name="vm"
+-            type="imdb.assignment.umesh0492.ui.movieList.MainActivityVM" />
++            type="imdb.assignment.umesh0492.ui.movieList.MovieActivityVM" />
+     </data>
+ 
+     <android.support.constraint.ConstraintLayout
+Index: app/src/main/res/layout/item_movie.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    >\n    <data>\n\n        <variable\n            name=\"item\"\n            type=\"imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass\" />\n\n        <variable\n            name=\"vm\"\n            type=\"imdb.assignment.umesh0492.ui.movieList.MainActivityVM\" />\n    </data>\n\n    <android.support.v7.widget.CardView\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:clickable=\"true\"\n        android:onClick=\"@{()->vm.onItemClicked(item)}\"\n        app:cardElevation=\"2dp\"\n        android:layout_margin=\"4dp\"\n        app:contentPadding=\"4dp\">\n\n        <android.support.constraint.ConstraintLayout\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\">\n\n            <ImageView\n                android:id=\"@+id/poster\"\n                android:layout_width=\"100dp\"\n                android:layout_height=\"100dp\"\n                android:layout_marginBottom=\"8dp\"\n                android:layout_marginStart=\"8dp\"\n                android:layout_marginTop=\"8dp\"\n                android:padding=\"4dp\"\n                app:layout_constraintBottom_toBottomOf=\"parent\"\n                app:layout_constraintStart_toStartOf=\"parent\"\n                app:layout_constraintTop_toTopOf=\"parent\" />\n\n            <TextView\n                android:id=\"@+id/movie_title\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginEnd=\"8dp\"\n                android:layout_marginStart=\"8dp\"\n                android:layout_marginTop=\"8dp\"\n                android:minLines=\"3\"\n                android:padding=\"4dp\"\n                android:text=\"@{item.Title}\"\n                app:layout_constraintEnd_toEndOf=\"parent\"\n                app:layout_constraintHorizontal_bias=\"0.0\"\n                app:layout_constraintStart_toEndOf=\"@+id/poster\"\n                app:layout_constraintTop_toTopOf=\"parent\" />\n\n            <TextView\n                android:id=\"@+id/year\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:layout_marginBottom=\"8dp\"\n                android:layout_marginEnd=\"8dp\"\n                android:padding=\"4dp\"\n                android:text=\"@{item.Year}\"\n                app:layout_constraintBottom_toBottomOf=\"parent\"\n                app:layout_constraintEnd_toEndOf=\"parent\"\n                app:layout_constraintHorizontal_bias=\"1.0\"\n                app:layout_constraintStart_toEndOf=\"@+id/poster\" />\n\n        </android.support.constraint.ConstraintLayout>\n    </android.support.v7.widget.CardView>\n</layout>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/item_movie.xml	(date 1524820713000)
++++ app/src/main/res/layout/item_movie.xml	(date 1525330319000)
+@@ -6,11 +6,11 @@
+ 
+         <variable
+             name="item"
+-            type="imdb.assignment.umesh0492.ui.movieList.data.model.MoviesDataClass" />
++            type="imdb.assignment.umesh0492.data.model.MoviesDataClass" />
+ 
+         <variable
+             name="vm"
+-            type="imdb.assignment.umesh0492.ui.movieList.MainActivityVM" />
++            type="imdb.assignment.umesh0492.ui.movieList.MovieActivityVM" />
+     </data>
+ 
+     <android.support.v7.widget.CardView
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\n    <string name=\"app_name\">RentoMojo</string>\n    <string name=\"network_issue\">Network issue</string>\n</resources>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/values/strings.xml	(date 1524820713000)
++++ app/src/main/res/values/strings.xml	(date 1525339981000)
+@@ -1,4 +1,4 @@
+ <resources>
+-    <string name="app_name">RentoMojo</string>
++    <string name="app_name">IMDB</string>
+     <string name="network_issue">Network issue</string>
+ </resources>
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"rentomojo.test.umesh0492\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n        android:name=\"imdb.assignment.umesh0492.App\"\n        android:allowBackup=\"true\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/AppTheme\">\n        <activity android:name=\"imdb.assignment.umesh0492.ui.movieList.MainActivity\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity\n            android:name=\"imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivity\"\n            android:parentActivityName=\"imdb.assignment.umesh0492.ui.movieList.MainActivity\" />\n    </application>\n\n</manifest>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/AndroidManifest.xml	(date 1524820713000)
++++ app/src/main/AndroidManifest.xml	(date 1525326558000)
+@@ -1,7 +1,8 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-    package="rentomojo.test.umesh0492">
++    package="imdb.assignment.umesh0492">
+ 
++    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     <uses-permission android:name="android.permission.INTERNET" />
+ 
+     <application
+@@ -12,7 +13,7 @@
+         android:roundIcon="@mipmap/ic_launcher_round"
+         android:supportsRtl="true"
+         android:theme="@style/AppTheme">
+-        <activity android:name="imdb.assignment.umesh0492.ui.movieList.MainActivity">
++        <activity android:name="imdb.assignment.umesh0492.ui.movieList.MovieActivity">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+@@ -20,7 +21,7 @@
+         </activity>
+         <activity
+             android:name="imdb.assignment.umesh0492.ui.movieDetail.MovieDetailActivity"
+-            android:parentActivityName="imdb.assignment.umesh0492.ui.movieList.MainActivity" />
++            android:parentActivityName="imdb.assignment.umesh0492.ui.movieList.MovieActivity" />
+     </application>
+ 
+ </manifest>
+Index: app/src/test/java/imdb/assignment/umesh0492/ExampleUnitTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package imdb.assignment.umesh0492\n\nimport org.junit.Test\n\nimport org.junit.Assert.*\n\n/**\n * Example local unit test, which will execute on the development machine (host).\n *\n * See [testing documentation](http://d.android.com/tools/testing).\n */\nclass ExampleUnitTest {\n    @Test\n    fun addition_isCorrect() {\n        assertEquals(4, 2 + 2)\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/test/java/imdb/assignment/umesh0492/ExampleUnitTest.kt	(date 1524820713000)
++++ app/src/test/java/imdb/assignment/umesh0492/ExampleUnitTest.kt	(date 1525330639000)
+@@ -1,9 +1,8 @@
+ package imdb.assignment.umesh0492
+ 
++import org.junit.Assert.assertEquals
+ import org.junit.Test
+ 
+-import org.junit.Assert.*
+-
+ /**
+  * Example local unit test, which will execute on the development machine (host).
+  *
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>apply plugin: 'com.android.application'\napply plugin: 'kotlin-android'\napply plugin: 'kotlin-android-extensions'\napply plugin: 'kotlin-kapt'\n\nandroid {\n    compileSdkVersion 27\n    defaultConfig {\n        applicationId \"imdb.assignment.umesh0492\"\n        minSdkVersion 19\n        targetSdkVersion 27\n        versionCode 1\n        versionName \"1.0\"\n        testInstrumentationRunner \"android.support.test.runner.AndroidJUnitRunner\"\n    }\n    buildTypes {\n        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'\n        }\n    }\n    dataBinding {\n        enabled = true\n    }\n}\n\n\ndependencies {\n    implementation fileTree(dir: 'libs', include: ['*.jar'])\n    implementation\"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n    implementation \"com.android.support:appcompat-v7:$rootProject.supportLibVersion\"\n    implementation \"com.android.support:recyclerview-v7:$rootProject.supportLibVersion\"\n    implementation \"com.android.support:cardview-v7:$rootProject.supportLibVersion\"\n    implementation \"com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion\"\n\n    implementation \"com.squareup.retrofit2:retrofit:$rootProject.retrofitVersion\"\n    implementation \"com.squareup.retrofit2:converter-moshi:$rootProject.retrofitVersion\"\n    implementation \"com.squareup.moshi:moshi:$rootProject.moshiVersion\"\n    implementation \"com.squareup.moshi:moshi-adapters:$rootProject.moshiVersion\"\n    implementation \"se.ansman.kotshi:api:$rootProject.kotshiVersion\"\n    kapt \"se.ansman.kotshi:compiler:$rootProject.kotshiVersion\"\n\n    implementation \"com.github.bumptech.glide:glide:$rootProject.glideVersion\"\n    annotationProcessor \"com.github.bumptech.glide:compiler:$rootProject.glideVersion\"\n\n    implementation \"android.arch.persistence.room:runtime:$rootProject.roomVersion\"\n    kapt \"android.arch.persistence.room:compiler:$rootProject.roomVersion\"\n\n    implementation \"android.arch.lifecycle:extensions:$rootProject.archLifecycleVersion\"\n    annotationProcessor \"android.arch.lifecycle:compiler:$rootProject.archLifecycleVersion\"\n\n    testImplementation 'junit:junit:4.12'\n    androidTestImplementation 'com.android.support.test:runner:1.0.1'\n    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(date 1524820713000)
++++ app/build.gradle	(date 1525331905000)
+@@ -14,42 +14,34 @@
+         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+     }
+     buildTypes {
++
++        debug {
++            buildConfigField("String", "BASE_URL", "\"http://www.omdbapi.com/\"")
++            buildConfigField("String", "API_KEY", "\"e22bb521\"")
++            applicationIdSuffix '.debug'
++            versionNameSuffix ' debug'
++        }
+         release {
++            buildConfigField("String", "BASE_URL", "\"http://www.omdbapi.com/\"")
++            buildConfigField("String", "API_KEY", "\"e22bb521\"")
+             minifyEnabled false
+             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+         }
+     }
++    dexOptions {
++        jumboMode = true
++        javaMaxHeapSize '2g'
++    }
++    compileOptions {
++        sourceCompatibility JavaVersion.VERSION_1_8
++        targetCompatibility JavaVersion.VERSION_1_8
++    }
+     dataBinding {
+         enabled = true
+     }
+-}
+-
+-
+-dependencies {
+-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+-    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+-    implementation "com.android.support:recyclerview-v7:$rootProject.supportLibVersion"
+-    implementation "com.android.support:cardview-v7:$rootProject.supportLibVersion"
+-    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
+-
+-    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofitVersion"
+-    implementation "com.squareup.retrofit2:converter-moshi:$rootProject.retrofitVersion"
+-    implementation "com.squareup.moshi:moshi:$rootProject.moshiVersion"
+-    implementation "com.squareup.moshi:moshi-adapters:$rootProject.moshiVersion"
+-    implementation "se.ansman.kotshi:api:$rootProject.kotshiVersion"
+-    kapt "se.ansman.kotshi:compiler:$rootProject.kotshiVersion"
+-
+-    implementation "com.github.bumptech.glide:glide:$rootProject.glideVersion"
+-    annotationProcessor "com.github.bumptech.glide:compiler:$rootProject.glideVersion"
+-
+-    implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
+-    kapt "android.arch.persistence.room:compiler:$rootProject.roomVersion"
+-
+-    implementation "android.arch.lifecycle:extensions:$rootProject.archLifecycleVersion"
+-    annotationProcessor "android.arch.lifecycle:compiler:$rootProject.archLifecycleVersion"
+-
+-    testImplementation 'junit:junit:4.12'
+-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
++    androidExtensions {
++        experimental = true
++    }
+ }
++
++apply from: 'dependencies.gradle'
+Index: app/dependencies.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/dependencies.gradle	(date 1525257982000)
++++ app/dependencies.gradle	(date 1525257982000)
+@@ -0,0 +1,114 @@
++def dependencyGroup(Closure closure) {
++    closure.delegate = dependencies
++    return closure
++}
++
++def local = dependencyGroup {
++    implementation fileTree(dir: 'libs', include: ['*.jar'])
++}
++
++def ui = dependencyGroup {
++    implementation "com.android.support:appcompat-v7:$supportLibVersion"
++    implementation "com.android.support:recyclerview-v7:$supportLibVersion"
++    implementation "com.android.support:cardview-v7:$supportLibVersion"
++    implementation "com.android.support.constraint:constraint-layout:$constraintLayoutVersion"
++    kapt "com.android.databinding:compiler:$gradleVersion"
++}
++
++def di = dependencyGroup {
++    implementation "com.google.dagger:dagger-android:$dagger2Version"
++    implementation "com.google.dagger:dagger-android-support:$dagger2Version" // if you use the support libraries
++    kapt "com.google.dagger:dagger-android-processor:$dagger2Version"
++    kapt "com.google.dagger:dagger-compiler:$dagger2Version"
++}
++
++def androidArchLifecycle = dependencyGroup{
++    implementation "android.arch.lifecycle:extensions:$rootProject.archLifecycleVersion"
++    kapt "android.arch.lifecycle:compiler:$rootProject.archLifecycleVersion"
++
++}
++
++def rx = dependencyGroup {
++    implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
++    implementation "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
++}
++
++def network = dependencyGroup {
++
++    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
++    implementation "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
++    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
++    implementation "com.squareup.moshi:moshi:$moshiVersion"
++    implementation "com.squareup.moshi:moshi-adapters:$moshiVersion"
++    implementation "se.ansman.kotshi:api:$kotshiVersion"
++    kapt "se.ansman.kotshi:compiler:$kotshiVersion"
++
++    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
++    implementation "com.squareup.okhttp3:logging-interceptor:$okHttpVersion"
++
++    implementation "com.facebook.stetho:stetho:$stethoVersion"
++    implementation "com.facebook.stetho:stetho-okhttp3:$stethoVersion"
++}
++def database = dependencyGroup {
++    implementation "android.arch.persistence.room:runtime:$roomVersion"
++    kapt "android.arch.persistence.room:compiler:$roomVersion"
++}
++
++def util = dependencyGroup {
++    implementation "com.jakewharton.timber:timber:$timberVersion"
++    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanary"
++    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanary"
++
++    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
++}
++
++def image = dependencyGroup {
++    implementation "com.github.bumptech.glide:glide:$rootProject.glideVersion"
++    kapt "com.github.bumptech.glide:compiler:$rootProject.glideVersion"
++}
++
++def test = dependencyGroup {
++    testImplementation 'junit:junit:4.12'
++    testImplementation "org.mockito:mockito-core:$mockitoVersion"
++    testImplementation "org.powermock:powermock-module-junit4:$powerMockVersion"
++    testImplementation "org.powermock:powermock-module-junit4-rule:$powerMockVersion"
++    testImplementation "org.powermock:powermock-api-mockito2:$powerMockVersion"
++    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
++    testImplementation "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
++    testImplementation "com.google.code.findbugs:jsr305:3.0.2"
++    testImplementation "android.arch.persistence.room:testing:$roomTesting"
++    testImplementation "android.arch.core:core-testing:$livedataTesting"
++
++    androidTestImplementation "com.android.support:support-annotations:$supportLibVersion"
++    androidTestImplementation 'com.android.support.test:runner:1.0.1'
++    androidTestImplementation 'com.android.support.test:rules:1.0.1'
++    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
++    androidTestImplementation 'com.android.support.test.espresso:espresso-intents:3.0.1'
++    androidTestImplementation "org.mockito:mockito-android:$mockitoVersion"
++    androidTestImplementation('com.android.support.test.espresso:espresso-contrib:3.0.1') {
++        exclude group: 'com.android.support', module: 'appcompat'
++        exclude group: 'com.android.support', module: 'support-v4'
++        exclude group: 'com.android.support', module: 'appcompat-v7'
++        exclude group: 'com.android.support', module: 'design'
++        exclude group: 'com.android.support', module: 'recyclerview-v7'
++    }
++    androidTestImplementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
++    androidTestImplementation 'com.jakewharton.espresso:okhttp3-idling-resource:1.0.0'
++    androidTestImplementation "com.google.code.findbugs:jsr305:3.0.2"
++    androidTestImplementation "android.arch.persistence.room:testing:$roomTesting"
++    androidTestImplementation "android.arch.core:core-testing:$livedataTesting"
++}
++
++dependencies {
++    local()
++
++    ui()
++    di()
++    androidArchLifecycle()
++    rx()
++    network()
++    database()
++    util()
++    image()
++    test()
++}
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"NullableNotNullManager\">\n    <option name=\"myDefaultNullable\" value=\"android.support.annotation.Nullable\" />\n    <option name=\"myDefaultNotNull\" value=\"android.support.annotation.NonNull\" />\n    <option name=\"myNullables\">\n      <value>\n        <list size=\"4\">\n          <item index=\"0\" class=\"java.lang.String\" itemvalue=\"org.jetbrains.annotations.Nullable\" />\n          <item index=\"1\" class=\"java.lang.String\" itemvalue=\"javax.annotation.Nullable\" />\n          <item index=\"2\" class=\"java.lang.String\" itemvalue=\"edu.umd.cs.findbugs.annotations.Nullable\" />\n          <item index=\"3\" class=\"java.lang.String\" itemvalue=\"android.support.annotation.Nullable\" />\n        </list>\n      </value>\n    </option>\n    <option name=\"myNotNulls\">\n      <value>\n        <list size=\"4\">\n          <item index=\"0\" class=\"java.lang.String\" itemvalue=\"org.jetbrains.annotations.NotNull\" />\n          <item index=\"1\" class=\"java.lang.String\" itemvalue=\"javax.annotation.Nonnull\" />\n          <item index=\"2\" class=\"java.lang.String\" itemvalue=\"edu.umd.cs.findbugs.annotations.NonNull\" />\n          <item index=\"3\" class=\"java.lang.String\" itemvalue=\"android.support.annotation.NonNull\" />\n        </list>\n      </value>\n    </option>\n  </component>\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_1_7\" project-jdk-name=\"1.8\" project-jdk-type=\"JavaSDK\">\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\n  </component>\n  <component name=\"ProjectType\">\n    <option name=\"id\" value=\"Android\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/misc.xml	(date 1524820713000)
++++ .idea/misc.xml	(date 1525331937000)
+@@ -24,7 +24,7 @@
+       </value>
+     </option>
+   </component>
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_7" project-jdk-name="1.8" project-jdk-type="JavaSDK">
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+     <output url="file://$PROJECT_DIR$/build/classes" />
+   </component>
+   <component name="ProjectType">
+Index: build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Top-level build file where you can add configuration options common to all sub-projects/modules.\n\nbuildscript {\n\n    ext{\n        kotlin_version = '1.2.40'\n        supportLibVersion = '27.1.1'\n        constraintLayoutVersion = '1.1.0'\n\n        retrofitVersion = '2.4.0'\n        moshiVersion = '1.5.0'\n        kotshiVersion = '1.0.2'\n\n        glideVersion = '4.7.1'\n\n        roomVersion = '1.0.0'\n        archLifecycleVersion = '1.1.1'\n\n    }\n\n    repositories {\n        google()\n        jcenter()\n    }\n    dependencies {\n        classpath 'com.android.tools.build:gradle:3.1.2'\n        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version\"\n        // NOTE: Do not place your application dependencies here; they belong\n        // in the individual module build.gradle files\n    }\n}\n\nallprojects {\n    repositories {\n        google()\n        jcenter()\n    }\n}\n\ntask clean(type: Delete) {\n    delete rootProject.buildDir\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- build.gradle	(date 1524820713000)
++++ build.gradle	(date 1525257913000)
+@@ -3,19 +3,38 @@
+ buildscript {
+ 
+     ext{
+-        kotlin_version = '1.2.40'
++        kotlinVersion = '1.2.41'
++        gradleVersion = '3.1.2'
++
+         supportLibVersion = '27.1.1'
+         constraintLayoutVersion = '1.1.0'
+ 
+         retrofitVersion = '2.4.0'
+         moshiVersion = '1.5.0'
+         kotshiVersion = '1.0.2'
++        okHttpVersion = '3.10.0'
++        stethoVersion = '1.5.0'
+ 
+         glideVersion = '4.7.1'
+ 
+         roomVersion = '1.0.0'
++
+         archLifecycleVersion = '1.1.1'
+ 
++        dagger2Version = '2.15'
++
++        timberVersion = '4.6.0'
++        leakCanary = '1.5.4'
++
++        rxJavaVersion = '2.1.9'
++        rxAndroidVersion = '2.0.2'
++
++        mockitoVersion = '2.15.0'
++        powerMockVersion = '2.0.0-beta.5'
++
++        livedataTesting  = '1.1.0'
++        roomTesting      = '1.0.0'
++
+     }
+ 
+     repositories {
+@@ -23,8 +42,8 @@
+         jcenter()
+     }
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:3.1.2'
+-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
++        classpath "com.android.tools.build:gradle:$gradleVersion"
++        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+         // NOTE: Do not place your application dependencies here; they belong
+         // in the individual module build.gradle files
+     }
+@@ -35,6 +54,11 @@
+         google()
+         jcenter()
+     }
++    afterEvaluate { // to print more than 100 errors
++        tasks.withType(JavaCompile.class) {
++            options.compilerArgs << "-Xmaxerrs" << "500"
++        }
++    }
+ }
+ 
+ task clean(type: Delete) {
