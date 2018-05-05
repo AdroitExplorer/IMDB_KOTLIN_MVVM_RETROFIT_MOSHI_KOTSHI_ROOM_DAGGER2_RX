@@ -11,7 +11,6 @@ import javax.inject.Singleton
 class AppApi
 @Inject constructor(var retrofit: Retrofit) : ApiHelper {
 
-
     override fun getMovieDetailsApiCall(id: String): Single<MoviesDataClass> {
         val service = retrofit.create(Api::class.java)
         return service.getMovieDetails(id)
@@ -21,6 +20,4 @@ class AppApi
         val service = retrofit.create(Api::class.java)
         return service.getMovieList("an", pageNo = pageNo.toString())
     }
-
-
 }

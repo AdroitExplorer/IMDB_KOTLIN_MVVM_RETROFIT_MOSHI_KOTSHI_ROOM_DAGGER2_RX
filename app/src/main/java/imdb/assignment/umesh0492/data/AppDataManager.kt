@@ -16,7 +16,6 @@ import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class AppDataManager
 @Inject constructor(context: Context, dbHelper: DbHelper, preferencesHelper: PreferencesHelper, apiHelper: ApiHelper) : DataManager {
@@ -36,30 +35,19 @@ class AppDataManager
 
     override fun getMovieListApiCall(pageNo: Int): Single<SearchDataClass> {
 
-        compositeDisposable.add(mApiHelper.getMovieListApiCall(pageNo)
-                .subscribeOn(Schedulers.computation())
-                .subscribe({ movieResponse ->
-                    for (movie in movieResponse.Search) {
-                        insertMovie(movie)
-                    }
-                },
-                        {
-                            //view.error(throwable)
-                        }))
-
         return mApiHelper.getMovieListApiCall(pageNo)
+                .subscribeOn(Schedulers.computation())
+                .doOnSuccess { for (movie in it.Search) {
+                    insertMovie(movie)
+                } }
     }
 
     override fun getMovieDetailsApiCall(id: String): Single<MoviesDataClass> {
-        compositeDisposable.add(mApiHelper.getMovieDetailsApiCall(id)
-                .subscribeOn(Schedulers.computation())
-                .subscribe({ movieResponse ->
-                    updateMovie(movieResponse)
-                },
-                        {
-                            //view.error(throwable)
-                        }))
         return mApiHelper.getMovieDetailsApiCall(id)
+                .subscribeOn(Schedulers.computation())
+                .doOnSuccess {
+                    updateMovie(it)
+                }
     }
 
 
